@@ -12,7 +12,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Project 1",
         epilog = "CSCI 8360 Data Science Practicum: Spring 2018",
         add_help = "How to use",
-        prog = "python assignment0.py -i <input_data_file> -l <input_labal_file> -o <output_directory> [optional args]")
+        prog = "python p1.py -i <input_data_file> -l <input_labal_file> -o <output_directory> [optional args]")
 
     #required arguments
     parser.add_argument("-i", "--inputData", required = True,
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
     if ( CLASSIFIER == BAY ):
         #TODO : Implement Bayesian Classifier
-        print()
+        print(args)
     elif ( CLASSIFIER == LOG ):
         #TODO : Implement Logistic Classifier
         print()
