@@ -38,15 +38,17 @@ if __name__ == "__main__":
     
     args = vars(parser.parse_args())
 
-    DATA_PATH = args['input'] 
-    STOP_FILE = "stop/stopwords.txt"
+    DATA_PATH = args['inputData']
+    LABEL_PATH = args['inputLabels']
     OUT_FILE  = args['output']
 
+    DATA_PATH  = args['testData']
+    LABEL_PATH = args['testLabels']
     CLASSIFIER = args['classifier']
     REGULARIZE = args['regularize']
     SMOOTH     = args['smooth']
-    
-    #TODO : Implement the classifiers
+    STOP_FILE  = args['stop']    
+
 
     spark = SparkSession\
         .builder\
