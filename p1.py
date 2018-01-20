@@ -9,24 +9,32 @@ LOG = "Logistic"
 RAF = "RandomForest"
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Assignment 0",
+    parser = argparse.ArgumentParser(description = "Project 1",
         epilog = "CSCI 8360 Data Science Practicum: Spring 2018",
         add_help = "How to use",
-        prog = "python assignment0.py -i <input_directory> -o <output_directory> -m <mode> -s <stopfile_directory>")
+        prog = "python assignment0.py -i <input_data_file> -l <input_labal_file> -o <output_directory> [optional args]")
 
     #required arguments
-    parser.add_argument("-i", "--input", required = True,
-        help = "The path to find the input data.")
-    parser.add_argument("-o", "--output, required = True,"
+    parser.add_argument("-i", "--inputData", required = True,
+        help = "The path to find the input training data.")
+    parser.add_argument("-l", "--inputLabels", required = True,
+        help = "The path to find the input training labels.")
+    parser.add_argument("-o", "--output", required = True,
         help = "The directory in which to place the output.")
     
     #optional arguments
+    parser.add_argument("-y", "--testData", 
+        help = "The path to find the input testing data.")
+    parser.add_argument("-z", "--testLabels", 
+        help = "The path to find the input testing labels.")
     parser.add_argument("-c", "--classifier", choices = ["Bayes","Logistic","RandomForest"], default = "Bayes",
         help = "The type of classifier to use: Naive Bayes, Logistic Regression, or Random Forest")
-    parser.add_argument("-r", "--regularize", action = store_true, default = False,
+    parser.add_argument("-r", "--regularize", action = 'store_true', default = False,
         help = "A flag for regularizing the feature space.")
-    parser.add_argument("-s", "--smooth", action = store_true, default = False,
+    parser.add_argument("-s", "--smooth", action = 'store_true', default = False,
         help = "A flag for using a Laplace smoother on the input features.")
+    parser.add_argument("-t", "--stop",
+        help = "The directory in which to find the stopwords file (if using).")
     
     args = vars(parser.parse_args())
 
@@ -37,7 +45,7 @@ if __name__ == "__main__":
     CLASSIFIER = args['classifier']
     REGULARIZE = args['regularize']
     SMOOTH     = args['smooth']
-
+    
     #TODO : Implement the classifiers
 
     spark = SparkSession\
