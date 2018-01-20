@@ -4,6 +4,10 @@ import argparse
 import numpy as np
 import json
 
+BAY = "Bayes"
+LOG = "Logistic"
+RAF = "RandomForest"
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Assignment 0",
         epilog = "CSCI 8360 Data Science Practicum: Spring 2018",
@@ -42,3 +46,13 @@ if __name__ == "__main__":
         .getOrCreate()
 
     sc = spark.sparkContext
+
+    if ( CLASSIFIER == BAY ):
+        #TODO : Implement Bayesian Classifier
+        print()
+    elif ( CLASSIFIER == LOG ):
+        #TODO : Implement Logistic Classifier
+        print()
+    elif ( CLASSIFIER == RAF ):
+        #TODO : Implement Random Forest Classifier
+        print()
