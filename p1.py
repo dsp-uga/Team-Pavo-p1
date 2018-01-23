@@ -42,8 +42,8 @@ if __name__ == "__main__":
     LABEL_PATH = args['inputLabels']
     OUT_FILE  = args['output']
 
-    DATA_PATH  = args['testData']
-    LABEL_PATH = args['testLabels']
+    TEST_DATA_PATH  = args['testData']
+    TEST_LABEL_PATH = args['testLabels']
     CLASSIFIER = args['classifier']
     REGULARIZE = args['regularize']
     SMOOTH     = args['smooth']
