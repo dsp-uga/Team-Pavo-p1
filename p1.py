@@ -9,6 +9,9 @@ BAY = "Bayes"
 LOG = "Logistic"
 RAF = "RandomForest"
 
+def swap(tup):
+    return (tup[1],tup[0])
+
 '''
 A method that takes in a tuple and returns a more sensible tuple. 
 Changes n==None to n==0 and reverses some orderings. 
@@ -16,12 +19,14 @@ Changes n==None to n==0 and reverses some orderings.
 @note       input tuple should be (wid,(n,did)) tuples
 @return     (did,(wid,n)) tuples
 '''
+
 def NBFun1(tup):
     n = tup[1][0]
     did = tup[1][1]
     wid = tup[0]
     if n == None : n = 0
     return (did,(wid,n))
+
 '''
 A method that takes ina  tuple and returns a re-ordered tuple.
 @param tup  the input tuple
@@ -49,6 +54,21 @@ def NBFun3(tup,B):
     count2 = tup[1][1]
     P      = count1 / (count2 + B)
     return ((wid,lab),P)
+
+def NBFun4(tup):
+    wid = tup[0]
+    n = 1 if not tup[1][0] == None else 0
+    did = tup[1][1]
+    return ((wid,did),n)
+
+def NBFun5(tup):
+    count = tup[1]
+    if count == None : count = 0
+    return count
+
+def NBFun6(accum,n):
+    ret = accum if accum[1]>n[1] else n
+    return ret
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description = "Project 1",
@@ -91,7 +111,6 @@ if __name__ == "__main__":
     SMOOTH     = args['smooth']
     STOP_FILE  = args['stop']    
 
-
     spark = SparkSession\
         .builder\
         .appName("Project0")\
@@ -108,8 +127,9 @@ if __name__ == "__main__":
         #start with a list of documents, one document one each line of the input file
         X     = sc.textFile(DATA_PATH)
         Xtest = sc.textFile(TEST_DATA_PATH)
-        #one string of labels for each document, though each document may have several labels
+        #start with a list of labels, one string of labels for each document, though each document may have several labels
         y = sc.textFile(LABEL_PATH)
+        ytest = sc.textFile(TEST_LABEL_PATH)
         '''
         First zip with Index and reverse the tuple to achieve document labeling, 
         then flat map the values to get each word from each document with its label, 
@@ -117,92 +137,122 @@ if __name__ == "__main__":
         and strip any leading or trailing punctuation (not including apostrophes). 
         The final result is (did, wid) tuples
         '''
+        print(X.collect())
         X = X.zipWithIndex()\
-             .map(lambda x : (x[1],x[0]))\
+             .map(lambda x: swap(x))\
              .flatMapValues(lambda x : x.split())\
-             .mapValues(lambda x: x.lower().replace("&quot;","").strip(string.punctuation.replace("'","")))
-
+             .mapValues(lambda x: x.lower().replace("&quot;","").strip(string.punctuation.replace("'","")))\
+             .filter(lambda x: len(x[1])>1)
+    
         Xtest = Xtest.zipWithIndex()\
-             .map(lambda x : (x[1],x[0]))\
-             .flatMapValues(lambda x : x.split())\
-             .mapValues(lambda x: x.lower().replace("&quot;","").strip(string.punctuation.replace("'","")))
+                     .map(lambda x : swap(x))\
+                     .flatMapValues(lambda x : x.split())\
+                     .mapValues(lambda x: x.lower().replace("&quot;","").strip(string.punctuation.replace("'","")))\
+                     .filter(lambda x: len(x[1])>1)\
+                     .distinct()
+        
         '''
         Again, zip wth index and reverse the tuple to achieve document labeling, 
         flat map the values by splitting at the ",", 
-        filter out any non "CAT" labels. 
+        filter out any non "CAT" labels.
+        The final result is (did, lab) tuples
         '''
         y = y.zipWithIndex()\
-             .map(lambda x: (x[1],x[0]))\
+             .map(lambda x: swap(x))\
              .flatMapValues(lambda x: x.split(","))\
              .filter(lambda x: not x[1].find("CAT")==-1)
+        ytest = ytest.zipWithIndex()\
+                     .map(lambda x: swap(x))\
+                     .flatMapValues(lambda x: x.split(","))\
+                     .filter(lambda x: not x[1].find("CAT")==-1)
 
-        #get the corpus vocabulary
+        #get the corpus vocabulary, the size of the vocabul, and the number of documents
         V = X.values()\
              .distinct()
-        B = len(V.collect())
-        VBroadcast = sc.broadcast(V.collect())
+        B = V.count()
+        N = X.keys()\
+             .distinct()\
+             .count()
 
-        #get the number of documents
-        N = len(X.keys()\
-                 .distinct()\
-                 .collect())
-        
         #get the numer of documents of each label
         Nc = y.map(lambda x: (x[1],1)).reduceByKey(add)
 
         #get the estimated prior probabilities
         priors = Nc.mapValues(lambda x: x/N)
 
-        '''
-        Get the number of times each word appears in each document class,
-        making sure to find out if a word DOESN'T appear in a certain class.
-        X is (did,wid) tuples.
-        XX becomes (wid,did) tuples.
-        V is (wid) tuples.
-        V.map(...) becomes (wid,1) tuples.
-        ''.roj(XX) yields (wid,(appears,did)) tuples
-            where appears == None if wid doesn't appear in did and 1 if it does
-        ''.map(NBFun1) yields (did,(wid,appears)) tuples
-            where appears == 1 FOR EACH OCCURARNCE of wid in did, 
-            or if wid does not appear in did, appears = 0 FOR A SINGLE TUPLE 
-        ''.join(y) yields (did,((wid,appears),label)) tuples
-        appearances.map(NBFun2) yields ((wid,label),appears) tuples
-        ''.reduceByKey(add) yields ((wid,label),n) tuples, 
-            i.e. - the number of occurences of wid in docs of type label
-        ''.mapValues(lambda x: x+1) adds one to the above n for Laplace Smoothing
-        Final tuple is ((wid,label),n+1)
-        '''
-        XX = X.map(lambda x : (x[1],x[0]))
-        appearances = V.map(lambda x: (x,1))\
-                       .rightOuterJoin(XX)\
-                       .map(NBFun1)\
-                       .join(y)
-        Tct = appearance.map(NBFun2)\
-                        .reduceByKey(add)\
-                        .mapValues(lambda x: x+1)
+        #XX gets the number of occurances of each word for each doc (not identifying non-occurences)
+        #X     .map(...)         => ((wid,did),1) pairs for each (did,wid) pair in X
+        #  ''  .reduceByKey(add) => ((wid,did),count1), count1 the number of times wid appears in did
+        #                           NOTE: No count1 will equal 0
+        XX = X.map(lambda x : (swap(x),1))\
+              .reduceByKey(add)
         
-        '''
-        Get the total number of words in each document class.
-        Tct.map(lambda x: (x[0][1],x[1]-1)) yields (label,n) tuples.
-        ''.reduceByKey(add) yields (label,sum) tuples
-            where sum is the number of words in all documents of type label
-        '''
-        Tct_by_label = Tct.map(lambda x: (x[0][1],x[1]-1))\
-                          .reduceByKey(add)
+        #VV helps us find the zero occurances
+        #V     .cartesian(...) => (wid,did) **NOTE : each unique**
+        #  ''  . map(...)      => ((wid,did),1) 
+        #  ''  .loj(XX)        => ((wid,did),(1,count1)) if (wid,did) is a key in XX
+        #                                               OR
+        #                         ((wid,did),(1,None))   if (wid,did) is NOT a key in XX
+        #  ''  .mapValues(...) => ((wid,did),count2)   
+        #  ''  .map(...)       => (did,(wid,count2)) 
+        #  ''  .join(y)        => (did,((wid,count2),lab)
+        #  ''  .mapValues(...) => (did,((lab,wid),count2)
+        #  ''  .values()       => ((lab,wid),count2)
+        #  ''  .reduceByKey()  => ((lab,wid),COUNT) where COUNT is the number of occurences of wid in lab type docs
+        
+        VV = V.cartesian(X.keys().distinct())\
+              .map(lambda x: (x,1))\
+              .leftOuterJoin(XX)\
+              .mapValues(lambda x: x[1] if not x[1]==None else 0)\
+              .map(lambda x: (x[0][1],(x[0][0],x[1])))\
+              .join(y)\
+              .mapValues(lambda x: ((x[1],x[0][0]),x[0][1]))\
+              .values()\
+              .reduceByKey(add)
 
-        '''
-        Get the conditional probabilities.
-        Tct.map(...) yields (lab,(wid,count1)) tuples
-        ''.join(Tct_by_label) yields (lab,((wid,count1),count2)) tuples
-        ''.map(NBFun3) computes the probabilities and returns ((wid,lab),P_hat) tuples
-        '''
-        
-        Ptc = Tct.map(lambda x: (x[0][1],(x[0][0],x[1])))\
-                 .join(Tct_by_label)\
-                 .map(lambda x: NBFun3(x,B))
+        #CBL gives us the total number of words in each class of document
+        #            => (lab,COUNT2)
+        countByLabel = VV.map(lambda x: (x[0][0],x[1]))\
+                 .reduceByKey(add)
 
+        #Tct is the conditional probabilities
+        #VV.map(...)            => (lab,(wid,COUNT))
+        #  ''  .join(CBL)       => (lab,((wid,COUNT),COUNT2))
+        #  ''  .map(...)        => ((lab,wid),(COUNT1,COUNT2))
+        #  ''  .mapValues(...)  => ((lab,wid),P(wid|lab))
+        Tct = VV.map(lambda x: (x[0][0],(x[0][1],x[1])))\
+                .join(countByLabel)\
+                .map(lambda x: ((x[0],x[1][0][0]),(x[1][0][1],x[1][1])))\
+                .mapValues(lambda x: (x[0]+1)/(x[1]+B))
+
+        #This gets us the probability estimates P(lab = c | x) for each c
+        #Xtest.keys() => (did)      NOT unique
+        #  ''  .distinct() => (did)     UNIQUE
+        #  ''  .cartesian(...) => (did,lab) for each did and lab value
+        #  ''  .join(Xtest)    => (did,(lab,wid))
+        #  ''  .map(swap)      => ((lab,wid),did)
+        #  ''  .join(Tct)      => ((lab,wid),(did,P(wid|lab))
+        #  ''  .map(...)       => ((lab,did),P(wid|lab))
+        #  ''  .mapValues(...) => ((lab,did),log(P(wid|lab)))
+        #  ''  .reduceByKey(...) => ((lab,did),Sum_wid(log(P(wid|lab))))
+        #  ''  .map(...)         => (lab,(did,Sum_wid))
+        #  ''  .join(priors)     => ((lab,((did,Sum_wid),P(lab))))
+        #  ''  .map(...)         => (did,(lab,Sum_wid + P(lab)))
+        #  ''  .reduceByKey(NBFun6) => (did,lab) where lab has Max Sum_wid + P(lab) over all lab for this did
+        probs = Xtest.keys()\
+                     .distinct()\
+                     .cartesian(y.values().distinct())\
+                     .join(Xtest)\
+                     .map(swap)\
+                     .join(Tct)\
+                     .map(lambda x: ((x[0][0],x[1][0]),x[1][1]))\
+                     .mapValues(lambda x: np.log(x))\
+                     .reduceByKey(add)\
+                     .map(lambda x: (x[0][0],(x[0][1],x[1])))\
+                     .join(priors)\
+                     .map(lambda x: (x[1][0][0],(x[0],x[1][0][1]+x[1][1])))\
+                     .reduceByKey(NBFun6)
         
-        Xtest = Xtest.filter(lambda x: x[1] not in VBroadcast.value())
         
     elif ( CLASSIFIER == LOG ):
         #TODO : Implement Logistic Classifier
