@@ -56,14 +56,14 @@ if __name__ == "__main__":
     REGULARIZE = args['regularize']
     SMOOTH     = args['smooth']
     STOP_FILE  = args['stop']    
-    '''
+    
     spark = SparkSession\
         .builder\
         .appName("Project0")\
         .getOrCreate()
 
     sc = spark.sparkContext
-    '''
+    
     sc = spark.sparkContext.getOrCreate()
     
     if ( CLASSIFIER == BAY ):
@@ -171,6 +171,7 @@ if __name__ == "__main__":
                 .join(countByLabel)\
                 .map(lambda x: ((x[0],x[1][0][0]),(x[1][0][1],x[1][1])))\
                 .mapValues(lambda x: (x[0])/(x[1]+B))
+
         #This gets us the probability estimates P(lab = c | x) for each c
         #Xtest.keys() => (did)      NOT unique
         #  ''  .distinct() => (did)     UNIQUE
