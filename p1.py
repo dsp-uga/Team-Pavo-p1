@@ -197,7 +197,7 @@ if __name__ == "__main__":
                      .reduceByKey(add)\
                      .map(lambda x: (x[0][0],(x[0][1],x[1])))\
                      .join(priors)\
-                     .map(lambda x: (x[1][0][0],(x[0],x[1][0][1]+x[1][1])))\
+                     .map(lambda x: (x[1][0][0],(x[0],x[1][0][1]+np.log(x[1][1]))))\
                      .reduceByKey(NBFun6)
 
         #counting our success...
