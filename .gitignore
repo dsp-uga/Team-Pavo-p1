@@ -6,3 +6,4 @@ spark-warehouse
 *derby*
 *metastore*
 data/Reuters/large*
+*.txt

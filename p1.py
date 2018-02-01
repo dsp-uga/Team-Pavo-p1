@@ -48,7 +48,7 @@ if __name__ == "__main__":
 
     DATA_PATH = args['inputData']
     LABEL_PATH = args['inputLabels']
-    OUT_FILE  = args['output']
+    OUT_FILE  = "data"+args['output']+".txt"
 
     TEST_DATA_PATH  = args['testData']
     TEST_LABEL_PATH = args['testLabels']
@@ -63,8 +63,8 @@ if __name__ == "__main__":
         .getOrCreate()
 
     sc = spark.sparkContext
-    
-    sc = spark.sparkContext.getOrCreate()
+
+    print("|%s| , |%s| , |%s|" % (DATA_PATH,LABEL_PATH,TEST_DATA_PATH))
     
     if ( CLASSIFIER == BAY ):
          
@@ -104,7 +104,8 @@ if __name__ == "__main__":
              .flatMapValues(lambda x: x.split(","))\
              .filter(lambda x: not x[1].find("CAT")==-1)
             
-        ytest = ytest.zipWithIndex()\
+        if not TEST_LABEL_PATH == None:
+            ytest = ytest.zipWithIndex()\
                      .map(lambda x: (x[1],x[0]))\
                      .flatMapValues(lambda x: x.split(","))\
                      .filter(lambda x: not x[1].find("CAT")==-1)
@@ -185,7 +186,7 @@ if __name__ == "__main__":
         #  ''  .map(...)         => (lab,(did,Sum_wid))
         #  ''  .join(priors)     => ((lab,((did,Sum_wid),P(lab))))
         #  ''  .map(...)         => (did,(lab,Sum_wid + P(lab)))
-        #  ''  .reduceByKey(NBFun6) => (did,lab) where lab has Max Sum_wid + P(lab) over all lab for this did
+        #  ''  .reduceByKey(NBFun6) => (did,(lab,pred)) where pred has Max Sum_wid + P(lab) over all lab for this did
         cross = Xtest.keys()\
                      .distinct()\
                      .cartesian(y.values().distinct())\
@@ -197,10 +198,21 @@ if __name__ == "__main__":
                      .reduceByKey(add)\
                      .map(lambda x: (x[0][0],(x[0][1],x[1])))\
                      .join(priors)\
+<<<<<<< HEAD
                      .map(lambda x: (x[1][0][0],(x[0],x[1][0][1]+np.log(x[1][1]))))\
                      .reduceByKey(NBFun6)
+=======
+                     .map(lambda x: (x[1][0][0],(x[0],x[1][0][1]+x[1][1])))\
+                     .reduceByKey(NBFun6)\
+                     .sortByKey()\
 
-        #counting our success...
+        
+        with open(OUT_FILE,"w") as f:
+            for pred in cross.values().keys().collect():
+                f.write(pred+"\n")
+>>>>>>> Working and writing output to save...
+
+        #Let's see how many we got right...
         cross = cross.map(lambda x: (x[0],x[1][0]))\
                      .join(ytest)          
 
