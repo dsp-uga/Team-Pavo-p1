@@ -48,6 +48,6 @@ Note: -stop "stopwords-file-path" for better stop words choice
 Authorship
 ===========
 Team Pavo:  
-	Hiten Nirmal  
-	Nicholas Klepp  
-	Jin Wang  
+*Hiten Nirmal  
+*Nicholas Klepp  
+*Jin Wang  
