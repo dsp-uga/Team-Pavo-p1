@@ -1,6 +1,6 @@
 # Team-Pavo-p1
-UGA-CSCI-8360-Project1
-Scalable Document Classification with Naive Bayes in Spark
+Scalable Document Classification with Naive Bayes in Spark (UGA-CSCI-8360-Project1)
+===================================================================================
 In project 1, we are using the Reuters Corpus, which is a set of news stories split into a hierarchy of categories. There are multiple class labels per document, our goal is to build a naive bayes model without using any build-in pacakges such as MLLib or scikit-learn. The model achieves 94.7% prediction accuracy in the hold-out data set.
 
 The data
@@ -14,9 +14,6 @@ X_test_small.txt, y_test_small.txt
 X_train_large.txt, y_train_large.txt
 X_test_large.txt
 
-Installing
-===========
-####
 
 Procedure
 ===========
@@ -38,18 +35,19 @@ For large test data, take the same data cleaning procedures as training set.
 Predict with the trained model and write the results in a single text file.
 Submit the text file with predictions to Autolab and get the accuracy results.
 
-Environment:
+Installing
 ===========
-1) This code run on ###
-2) The evaluation is made by submitting the resulting label file to the AutoLab.
 
-How to run:
-spark-submit ###
+
+Running:
+===========
+spark-submit 
 
 Note: -stop "stopwords-file-path" for better stop words choice
       -o " " for output-labeled-file (which is the result given for testing propose)
 
 Authorship
+===========
 Team Pavo:
 	Hiten Nirmal
 	Nicholas Klepp
