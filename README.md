@@ -58,7 +58,7 @@ Create a cluster-gcloud dataproc clusters create cluster-name
 Manually set master and worker configuration by using GCP console.
 
 Setting up a Job:
-gcloud dataproc jobs submit spark --cluster cluster-name -mainpthonfile.py -<arguments>
+gcloud dataproc jobs submit spark --cluster cluster-name -mainpthonfile.py-arguments
  
 
 Authorship
