@@ -47,7 +47,7 @@ Note: -stop "stopwords-file-path" for better stop words choice
 
 Using Google CLoud
 ===========
-Data Storage- where main python file is saved along witbh samle data
+Data Storage- where main python file is saved along with sample data
 
 DataProc- Creating a cluster and submitting a job
 
