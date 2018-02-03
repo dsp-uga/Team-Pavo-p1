@@ -45,6 +45,17 @@ spark-submit
 Note: -stop "stopwords-file-path" for better stop words choice  
       -o " " for output-labeled-file (which is the result given for testing propose)
 
+Using Google CLoud
+===========
+Data Storage- where main python file is saved along witbh samle data
+DataProc- Creating a cluster and submitting a job
+
+Create a cluster-gcloud dataproc clusters create cluster-name
+Manually set master and worker configuration by using GCP console.
+
+Setting up a Job:
+gcloud dataproc jobs submit spark --cluster cluster-name -mainpthonfile.py -<arguments>
+
 Authorship
 ===========
 Team Pavo:  
