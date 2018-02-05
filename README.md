@@ -34,16 +34,6 @@ For large test data, take the same data cleaning procedures as training set.
 Predict with the trained model and write the results in a single text file.  
 Submit the text file with predictions to Autolab and get the accuracy results.  
 
-Installing
-===========
-
-
-Running
-===========
-spark-submit 
-
-Note: -stop "stopwords-file-path" for better stop words choice  
-      -o " " for output-labeled-file (which is the result given for testing propose)
 
 Using Google CLoud
 ===========
